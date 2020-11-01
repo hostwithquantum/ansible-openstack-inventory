@@ -23,11 +23,18 @@ func main() {
 
 	allServers := server.GetByCustomer(provider, customer)
 	for _, server := range allServers {
-		fmt.Println(server.Name)
-		for network, networkDetails := range server.Addresses {
-			if network == "quantum-internal" {
-				fmt.Printf("%v\n", networkDetails)
-			}
+		inventory.AddHostToGroup(server.Name, defaultGroup)
+		inventory.AddHostVar("ansible_host", server.IPAddress, server.Name)
+
+		for _, g := range childrenGroups {
+			inventory.AddHostToGroup(server.Name, g)
+		}
+	}
+
+	for _, group := range append(childrenGroups, defaultGroup) {
+		sec, err := cfg.GetSection(group)
+		if err != nil {
+			continue
 		}
 	}
 }
