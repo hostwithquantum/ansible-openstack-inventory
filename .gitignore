@@ -1,2 +1,3 @@
 .envrc
-ansible-openstack-inventory
+config.ini
+dist/

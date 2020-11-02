@@ -1,0 +1,7 @@
+network=some-network
+
+[all]
+children=another,group,here
+
+[another]
+children=here
