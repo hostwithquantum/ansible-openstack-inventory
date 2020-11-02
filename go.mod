@@ -5,5 +5,6 @@ go 1.14
 require (
 	github.com/gophercloud/gophercloud v0.13.0
 	github.com/pkg/errors v0.9.1
+	github.com/urfave/cli/v2 v2.3.0
 	gopkg.in/ini.v1 v1.62.0
 )

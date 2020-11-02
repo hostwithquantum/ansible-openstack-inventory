@@ -4,4 +4,4 @@ build:
 	goreleaser --snapshot --skip-publish --rm-dist
 
 run: build
-	./ansible-openstack-inventory | jq '.'
+	./dist/ansible-openstack-inventory_darwin_amd64/ansible-openstack-inventory --list | jq '.'

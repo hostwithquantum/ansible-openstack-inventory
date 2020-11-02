@@ -3,3 +3,4 @@ export OS_PASSWORD=
 export OS_AUTH_URL=
 export OS_TENANT_NAME=
 export OS_DOMAIN_NAME=
+export QUANTUM_CUSTOMER=
