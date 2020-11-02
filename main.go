@@ -60,33 +60,44 @@ func main() {
 				log.Fatal("Can only use one of `--list` or `--host node`.")
 			}
 
-			if c.String("host") != "" {
-				log.Fatal("Not implemented yet.")
-			}
-
 			if c.String("host") == "" && !c.Bool("list") {
 				log.Fatal("No command provided.")
 			}
-
-			cfg, err := ini.Load(c.String("config"))
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			var accessNetwork = cfg.Section("").Key("network").String()
-			var childrenGroups = cfg.Section("all").Key("children").Strings(",")
 
 			provider, err := auth.Authenticate()
 			if err != nil {
 				log.Fatal(err)
 			}
 
+			cfg, err := ini.Load(c.String("config"))
+			if err != nil {
+				log.Fatal(err)
+			}
+			var accessNetwork = cfg.Section("").Key("network").String()
+
+			api := server.NewAPI(accessNetwork, provider)
+
+			if c.String("host") != "" {
+				s := api.GetByNode(c.String("host"))
+
+				hostVars := make(map[string]string)
+				hostVars["ansible_host"] = s.IPAddress
+
+				json, err := json.Marshal(hostVars)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				fmt.Println(string(json))
+				os.Exit(0)
+			}
+
+			var childrenGroups = cfg.Section("all").Key("children").Strings(",")
+
 			customer := c.String("customer")
 			if customer == "" {
 				log.Fatal("No customer env variable")
 			}
-
-			api := server.NewAPI(accessNetwork, provider)
 
 			allServers := api.GetByCustomer(customer)
 

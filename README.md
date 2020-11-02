@@ -15,6 +15,6 @@ $ QUANTUM_CUSTOMER=... ./ansible-openstack-inventory
 - [x] return correct JSON format of hosts
 - [x] how to add additional groups
 - [x] implement `--list`
-- [ ] implement `--host node`
+- [x] implement `--host node`
 - [ ] better error handling (instead of `os.Exit`)
 
