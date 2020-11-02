@@ -50,9 +50,10 @@ func main() {
 				EnvVars: []string{"QUANTUM_CUSTOMER"},
 			},
 			&cli.StringFlag{
-				Name:  "config",
-				Usage: "Settings for groups, etc. for --list",
-				Value: "config.ini",
+				Name:    "config",
+				Usage:   "Settings for groups, etc. for --list",
+				Value:   "config.ini",
+				EnvVars: []string{"QUANTUM_INVENTORY_CONFIG"},
 			},
 		},
 		Action: func(c *cli.Context) error {
