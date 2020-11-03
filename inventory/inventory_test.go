@@ -1,11 +1,11 @@
 package inventory_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
 
+	"github.com/hostwithquantum/ansible-openstack-inventory/file"
 	"github.com/hostwithquantum/ansible-openstack-inventory/inventory"
 )
 
@@ -31,6 +31,38 @@ func Test_ReturnJSONInventory(t *testing.T) {
 		if !ok {
 			t.Log(json)
 			t.Errorf("The generated JSON doesn't contain '%s'", test)
+		}
+	}
+}
+
+func Test_AddVarToGroup(t *testing.T) {
+	inventory := createBasicInventory()
+
+	groupName := "test"
+	t.Logf("Testing '%s'", groupName)
+
+	gvf := file.NewGroupVarsFile("./data")
+	groupFileYaml, err := gvf.HandleGroup(groupName)
+	if err != nil {
+		t.Error(err)
+	}
+
+	for varKey, varValue := range groupFileYaml {
+		inventory.AddVarToGroup(groupName, varKey, varValue)
+	}
+
+	json := inventory.ReturnJSONInventory()
+
+	tests := []string{
+		"\"and_another\":[\"this\",\"is\",\"a\",\"slice\"]",
+		"\"another\":1",
+		"\"some_variable\":\"string\"",
+	}
+
+	for _, test := range tests {
+		ok := strings.Contains(json, test)
+		if !ok {
+			t.Errorf("JSON does not contain: '%s'", test)
 		}
 	}
 }

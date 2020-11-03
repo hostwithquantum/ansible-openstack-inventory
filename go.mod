@@ -9,4 +9,5 @@ require (
 	github.com/rackspace/gophercloud v1.0.0
 	github.com/urfave/cli/v2 v2.3.0
 	gopkg.in/ini.v1 v1.62.0
+	gopkg.in/yaml.v2 v2.3.0
 )
