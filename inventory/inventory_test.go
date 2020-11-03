@@ -26,13 +26,7 @@ func Test_ReturnJSONInventory(t *testing.T) {
 		"\"test\":{\"hosts\":[\"127.0.0.1\"],\"vars\":{\"group_var\":[\"bar\",\"foobar\"]}}",
 	}
 
-	for _, test := range tests {
-		ok := strings.Contains(json, test)
-		if !ok {
-			t.Log(json)
-			t.Errorf("The generated JSON doesn't contain '%s'", test)
-		}
-	}
+	assertStringContains(json, tests, t)
 }
 
 func Test_AddVarToGroup(t *testing.T) {
@@ -58,13 +52,7 @@ func Test_AddVarToGroup(t *testing.T) {
 		"\"another\":1",
 		"\"some_variable\":\"string\"",
 	}
-
-	for _, test := range tests {
-		ok := strings.Contains(json, test)
-		if !ok {
-			t.Errorf("JSON does not contain: '%s'", test)
-		}
-	}
+	assertStringContains(json, tests, t)
 }
 
 func createBasicInventory() *inventory.AnsibleInventory {
@@ -75,4 +63,13 @@ func createBasicInventory() *inventory.AnsibleInventory {
 	inventory.AddVarToGroup("test", "group_var", []string{"bar", "foobar"})
 
 	return inventory
+}
+
+func assertStringContains(haystack string, needles []string, t *testing.T) {
+	for _, test := range needles {
+		ok := strings.Contains(haystack, test)
+		if !ok {
+			t.Errorf("String does not contain: '%s'", test)
+		}
+	}
 }
