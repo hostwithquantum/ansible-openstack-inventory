@@ -5,3 +5,6 @@ build:
 
 run: build
 	./dist/ansible-openstack-inventory_darwin_amd64/ansible-openstack-inventory --list | jq '.'
+
+test:
+	go test ./...

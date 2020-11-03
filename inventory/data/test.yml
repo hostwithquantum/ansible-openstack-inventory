@@ -1,0 +1,7 @@
+some_variable: string
+another: 1
+and_another:
+  - this
+  - is
+  - a
+  - slice

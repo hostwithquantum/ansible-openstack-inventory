@@ -1,5 +1,10 @@
 package inventory
 
+import (
+	"encoding/json"
+	"log"
+)
+
 // AnsibleInventory ...
 type AnsibleInventory struct {
 	hosts    []string
@@ -67,18 +72,23 @@ func (inventory AnsibleInventory) AddVarToGroup(group string, variable string, v
 }
 
 // ReturnJSONInventory ...
-func (inventory AnsibleInventory) ReturnJSONInventory() map[string]interface{} {
-	json := make(map[string]interface{})
+func (inventory AnsibleInventory) ReturnJSONInventory() string {
+	jsonMap := make(map[string]interface{})
 
 	hostvars := make(map[string]map[string]map[string]string)
 	hostvars["hostvars"] = inventory.hostvars
 
-	json["_meta"] = hostvars
-	json["all"] = inventory.groups["all"]
+	jsonMap["_meta"] = hostvars
+	jsonMap["all"] = inventory.groups["all"]
 
 	for _, group := range inventory.groups {
-		json[group.Name] = inventory.groups[group.Name]
+		jsonMap[group.Name] = inventory.groups[group.Name]
 	}
 
-	return json
+	jsonByte, err := json.Marshal(jsonMap)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return string(jsonByte)
 }

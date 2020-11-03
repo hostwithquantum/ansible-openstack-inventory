@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/hostwithquantum/ansible-openstack-inventory/auth"
+	"github.com/hostwithquantum/ansible-openstack-inventory/file"
 	"github.com/hostwithquantum/ansible-openstack-inventory/inventory"
 	"github.com/hostwithquantum/ansible-openstack-inventory/server"
 	"github.com/urfave/cli/v2"
@@ -54,6 +55,12 @@ func main() {
 				Usage:   "Settings for groups, etc. for --list",
 				Value:   "config.ini",
 				EnvVars: []string{"QUANTUM_INVENTORY_CONFIG"},
+			},
+			&cli.StringFlag{
+				Name:    "load-group-vars",
+				Usage:   "Path to ./inventory/customer/group_vars",
+				Value:   "",
+				EnvVars: []string{"QUANTUM_INVENTORY_VARS_PATH"},
 			},
 		},
 		Action: func(c *cli.Context) error {
@@ -117,6 +124,8 @@ func main() {
 				}
 			}
 
+			groupVarsFile := file.NewGroupVarsFile(c.String("load-group-vars"))
+
 			for _, group := range append(childrenGroups, defaultGroup) {
 				sec, err := cfg.GetSection(group)
 				if err != nil {
@@ -124,6 +133,18 @@ func main() {
 				}
 
 				inventory.AddChildrenToGroup(sec.Key("children").Strings(","), group)
+
+				if c.String("load-group-vars") != "" {
+					groupFileYaml, err := groupVarsFile.HandleGroup(group)
+					if err != nil {
+						//log.Println(err)
+						continue
+					}
+
+					for varKey, varValue := range groupFileYaml {
+						inventory.AddVarToGroup(group, varKey, varValue)
+					}
+				}
 			}
 
 			// FIXME: move into config.ini
@@ -133,12 +154,7 @@ func main() {
 				customer,
 			})
 
-			json, err := json.Marshal(inventory.ReturnJSONInventory())
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			fmt.Println(string(json))
+			fmt.Println(inventory.ReturnJSONInventory())
 			return nil
 		},
 	}
