@@ -17,8 +17,7 @@ func ExampleNewInventory() {
 
 func Test_ReturnJSONInventory(t *testing.T) {
 	inventory := createBasicInventory()
-	jsonB, _ := json.Marshal(inventory.ReturnJSONInventory())
-	json := string(jsonB)
+	json := inventory.ReturnJSONInventory()
 
 	tests := []string{
 		"{\"_meta\":",

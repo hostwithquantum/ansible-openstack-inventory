@@ -133,12 +133,7 @@ func main() {
 				customer,
 			})
 
-			json, err := json.Marshal(inventory.ReturnJSONInventory())
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			fmt.Println(string(json))
+			fmt.Println(inventory.ReturnJSONInventory())
 			return nil
 		},
 	}
