@@ -32,22 +32,25 @@ func Test_ReturnJSONInventory(t *testing.T) {
 func Test_AddVarToGroup(t *testing.T) {
 	inventory := createBasicInventory()
 
-	groupName := "test"
-	t.Logf("Testing '%s'", groupName)
+	groupNames := []string{"all", "test"}
+	for _, groupName := range groupNames {
+		t.Logf("Testing '%s'", groupName)
 
-	gvf := file.NewGroupVarsFile("./data")
-	groupFileYaml, err := gvf.HandleGroup(groupName)
-	if err != nil {
-		t.Error(err)
-	}
+		gvf := file.NewGroupVarsFile("./data")
+		groupFileYaml, err := gvf.HandleGroup(groupName)
+		if err != nil {
+			t.Error(err)
+		}
 
-	for varKey, varValue := range groupFileYaml {
-		inventory.AddVarToGroup(groupName, varKey, varValue)
+		for varKey, varValue := range groupFileYaml {
+			inventory.AddVarToGroup(groupName, varKey, varValue)
+		}
 	}
 
 	json := inventory.ReturnJSONInventory()
 
 	tests := []string{
+		"\"all\":{\"hosts\":[\"127.0.0.1\"],\"vars\":{\"all_variable\":\"hello\"}}",
 		"\"and_another\":[\"this\",\"is\",\"a\",\"slice\"]",
 		"\"another\":1",
 		"\"some_variable\":\"string\"",

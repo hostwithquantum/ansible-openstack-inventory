@@ -90,6 +90,7 @@ func main() {
 
 				hostVars := make(map[string]string)
 				hostVars["ansible_host"] = s.IPAddress
+				hostVars["floating_ip"] = s.FloatingIP
 
 				json, err := json.Marshal(hostVars)
 				if err != nil {
@@ -119,6 +120,10 @@ func main() {
 				inventory.AddHostToGroup(server.Name, defaultGroup)
 				inventory.AddHostVar("ansible_host", server.IPAddress, server.Name)
 
+				if server.FloatingIP != "" {
+					inventory.AddHostVar("floating_ip", server.FloatingIP, server.Name)
+				}
+
 				for _, g := range childrenGroups {
 					inventory.AddHostToGroup(server.Name, g)
 				}
@@ -146,13 +151,6 @@ func main() {
 					}
 				}
 			}
-
-			// FIXME: move into config.ini
-			inventory.AddVarToGroup("docker_swarm_manager", "swarm_labels", []string{
-				"quantum",
-				"manager",
-				customer,
-			})
 
 			fmt.Println(inventory.ReturnJSONInventory())
 			return nil
