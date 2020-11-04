@@ -90,6 +90,7 @@ func main() {
 
 				hostVars := make(map[string]string)
 				hostVars["ansible_host"] = s.IPAddress
+				hostVars["floating_ip"] = s.FloatingIP
 
 				json, err := json.Marshal(hostVars)
 				if err != nil {
@@ -118,6 +119,10 @@ func main() {
 			for _, server := range allServers {
 				inventory.AddHostToGroup(server.Name, defaultGroup)
 				inventory.AddHostVar("ansible_host", server.IPAddress, server.Name)
+
+				if server.FloatingIP != "" {
+					inventory.AddHostVar("floating_ip", server.FloatingIP, server.Name)
+				}
 
 				for _, g := range childrenGroups {
 					inventory.AddHostToGroup(server.Name, g)
