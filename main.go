@@ -147,13 +147,6 @@ func main() {
 				}
 			}
 
-			// FIXME: move into config.ini
-			inventory.AddVarToGroup("docker_swarm_manager", "swarm_labels", []string{
-				"quantum",
-				"manager",
-				customer,
-			})
-
 			fmt.Println(inventory.ReturnJSONInventory())
 			return nil
 		},
