@@ -12,10 +12,12 @@ import (
 	"github.com/gophercloud/gophercloud/pagination"
 )
 
-type ansibleServer struct {
+// AnsibleServer ... simple struct to build an inventory from
+type AnsibleServer struct {
 	Name       string
 	IPAddress  string
 	FloatingIP string
+	MetaData   map[string]string
 }
 
 // API ...
@@ -43,11 +45,11 @@ func NewAPI(network string, provider *gophercloud.ProviderClient) *API {
 }
 
 // GetByNode ...
-func (api API) GetByNode(host string) ansibleServer {
+func (api API) GetByNode(host string) AnsibleServer {
 	opts := servers.ListOpts{Name: host}
 	pager := servers.List(api.client, opts)
 
-	server := ansibleServer{}
+	server := AnsibleServer{}
 
 	publicIPs := api.getFloatingIps()
 
@@ -61,6 +63,7 @@ func (api API) GetByNode(host string) ansibleServer {
 		for _, s := range serverList {
 			server.Name = s.Name
 			server.IPAddress = extractIP(s.Addresses, api.accessNetwork)
+			server.MetaData = s.Metadata
 
 			if _, ok := publicIPs[s.ID]; ok {
 				server.FloatingIP = publicIPs[s.ID]
@@ -79,7 +82,7 @@ func (api API) GetByNode(host string) ansibleServer {
 }
 
 // GetByCustomer ...
-func (api API) GetByCustomer(customer string) []ansibleServer {
+func (api API) GetByCustomer(customer string) []AnsibleServer {
 	publicIPs := api.getFloatingIps()
 
 	allPages, err := servers.List(api.client, nil).AllPages()
@@ -88,7 +91,7 @@ func (api API) GetByCustomer(customer string) []ansibleServer {
 		os.Exit(1)
 	}
 
-	var customerServers []ansibleServer
+	var customerServers []AnsibleServer
 
 	allServers, err := servers.ExtractServers(allPages)
 	for _, server := range allServers {
@@ -99,9 +102,10 @@ func (api API) GetByCustomer(customer string) []ansibleServer {
 			continue
 		}
 
-		node := ansibleServer{
+		node := AnsibleServer{
 			Name:      server.Name,
 			IPAddress: extractIP(server.Addresses, api.accessNetwork),
+			MetaData:  server.Metadata,
 		}
 
 		if _, ok := publicIPs[server.ID]; ok {
