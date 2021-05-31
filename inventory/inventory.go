@@ -7,12 +7,13 @@ import (
 
 // AnsibleInventory ...
 type AnsibleInventory struct {
-	hosts    []string
-	groups   map[string]inventoryGroup
-	hostvars map[string]map[string]string
+	Hosts    []string
+	Groups   map[string]InventoryGroup
+	Hostvars map[string]map[string]string
 }
 
-type inventoryGroup struct {
+// InventoryGroup ...
+type InventoryGroup struct {
 	Name     string                 `json:"-"`
 	Hosts    []string               `json:"hosts"`
 	Vars     map[string]interface{} `json:"vars,omitempty"`
@@ -23,18 +24,18 @@ type inventoryGroup struct {
 func NewInventory(customer string, groups []string) *AnsibleInventory {
 	inventory := new(AnsibleInventory)
 
-	inventory.hosts = make([]string, 0)
-	inventory.groups = make(map[string]inventoryGroup)
-	inventory.hostvars = make(map[string]map[string]string)
+	inventory.Hosts = make([]string, 0)
+	inventory.Groups = make(map[string]InventoryGroup)
+	inventory.Hostvars = make(map[string]map[string]string)
 
 	for _, child := range groups {
-		var group = inventoryGroup{
+		var group = InventoryGroup{
 			Name: child,
 		}
 
 		group.Vars = make(map[string]interface{})
 
-		inventory.groups[child] = group
+		inventory.Groups[child] = group
 	}
 
 	return inventory
@@ -42,48 +43,38 @@ func NewInventory(customer string, groups []string) *AnsibleInventory {
 
 // AddChildrenToGroup ...
 func (inventory AnsibleInventory) AddChildrenToGroup(groups []string, group string) {
-	g := inventory.groups[group]
+	g := inventory.Groups[group]
 	g.Children = groups
-	inventory.groups[group] = g
+	inventory.Groups[group] = g
 }
 
 // AddHostToGroup ...
 func (inventory AnsibleInventory) AddHostToGroup(host string, group string) {
-	g := inventory.groups[group]
+	g := inventory.Groups[group]
 	g.Hosts = append(g.Hosts, host)
-	inventory.groups[group] = g
+	inventory.Groups[group] = g
 }
 
 // AddHostVar ...
 func (inventory AnsibleInventory) AddHostVar(variable string, value string, host string) {
-	_, ok := inventory.hostvars[host]
+	_, ok := inventory.Hostvars[host]
 	if !ok {
-		inventory.hostvars[host] = make(map[string]string)
+		inventory.Hostvars[host] = make(map[string]string)
 	}
 
-	inventory.hostvars[host][variable] = value
+	inventory.Hostvars[host][variable] = value
 }
 
 // AddVarToGroup ...
 func (inventory AnsibleInventory) AddVarToGroup(group string, variable string, value interface{}) {
-	g := inventory.groups[group]
+	g := inventory.Groups[group]
 	g.Vars[variable] = value
-	inventory.groups[group] = g
+	inventory.Groups[group] = g
 }
 
 // ReturnJSONInventory ...
 func (inventory AnsibleInventory) ReturnJSONInventory() string {
-	jsonMap := make(map[string]interface{})
-
-	hostvars := make(map[string]map[string]map[string]string)
-	hostvars["hostvars"] = inventory.hostvars
-
-	jsonMap["_meta"] = hostvars
-	jsonMap["all"] = inventory.groups["all"]
-
-	for _, group := range inventory.groups {
-		jsonMap[group.Name] = inventory.groups[group.Name]
-	}
+	jsonMap := inventory.BuildInventory()
 
 	jsonByte, err := json.Marshal(jsonMap)
 	if err != nil {
