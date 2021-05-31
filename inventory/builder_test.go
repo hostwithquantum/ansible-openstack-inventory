@@ -13,12 +13,7 @@ func Test_Cluster(t *testing.T) {
 		createWorker(),
 	}
 
-	groups := []string{
-		"docker_swarm_manager",
-		"docker_swarm_worker",
-		"portainer-agent-node",
-		"promtail",
-	}
+	groups := createGroups()
 
 	ansible := inventory.NewInventory("customer_name", append(groups, "all"))
 	ansible.BuildServers(servers, "all")
@@ -63,7 +58,37 @@ func Test_Cluster(t *testing.T) {
 	assertGroupLabels(worker_group, "worker", t)
 	assertGroupLabels(manager_group, "quantum", t)
 	assertGroupLabels(worker_group, "quantum", t)
+}
 
+func Test_SingleNode(t *testing.T) {
+	servers := []server.AnsibleServer{
+		createManager(),
+	}
+
+	groups := createGroups()
+
+	ansible := inventory.NewInventory("customer_name", append(groups, "all"))
+	ansible.BuildServers(servers, "all")
+	ansible.BuildServerGroups(servers, groups)
+
+	jsonInventory := ansible.BuildInventory()
+
+	_, ok := jsonInventory["docker_swarm_worker"].(inventory.InventoryGroup)
+	if ok {
+		t.Errorf("This group should not be here.")
+	}
+
+	for _, g := range append(groups, "all") {
+		if g == "docker_swarm_worker" {
+			continue
+		}
+
+		_g, ok := jsonInventory[g].(inventory.InventoryGroup)
+		if !ok {
+			t.Errorf("Could not find group: %s", _g)
+		}
+		assertHostCount(_g, len(servers), t)
+	}
 }
 
 func assertHostCount(group inventory.InventoryGroup, count int, t *testing.T) {
@@ -124,5 +149,14 @@ func createWorker() server.AnsibleServer {
 			"com.planetary-quantum.meta.role":  "worker",
 			"com.planetary-quantum.meta.label": "foo",
 		},
+	}
+}
+
+func createGroups() []string {
+	return []string{
+		"docker_swarm_manager",
+		"docker_swarm_worker",
+		"portainer-agent-node",
+		"promtail",
 	}
 }

@@ -68,8 +68,12 @@ func (inventory AnsibleInventory) BuildInventory() map[string]interface{} {
 	jsonMap["_meta"] = hostvars
 	jsonMap["all"] = inventory.Groups["all"]
 
+	// filter empty groups while we are at it
 	for _, group := range inventory.Groups {
-		jsonMap[group.Name] = inventory.Groups[group.Name]
+		// fmt.Printf("%s ------- %v", group.Name, group.Hosts)
+		if len(group.Hosts) > 0 {
+			jsonMap[group.Name] = inventory.Groups[group.Name]
+		}
 	}
 
 	return jsonMap
