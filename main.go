@@ -1,7 +1,7 @@
 package main
 
 import (
-	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 
@@ -65,21 +65,21 @@ func main() {
 		},
 		Action: func(c *cli.Context) error {
 			if c.Bool("list") && c.String("host") != "" {
-				log.Fatal("Can only use one of `--list` or `--host node`.")
+				return errors.New("Can only use one of `--list` or `--host node`.")
 			}
 
 			if c.String("host") == "" && !c.Bool("list") {
-				log.Fatal("No command provided.")
+				return errors.New("No command provided.")
 			}
 
 			provider, err := auth.Authenticate()
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 
 			cfg, err := ini.Load(c.String("config"))
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 			var accessNetwork = cfg.Section("").Key("network").String()
 
@@ -105,7 +105,7 @@ func main() {
 
 			customer := c.String("customer")
 			if customer == "" {
-				log.Fatal("No customer env variable")
+				return errors.New("No customer env variable")
 			}
 
 			allServers := api.GetByCustomer(customer)
