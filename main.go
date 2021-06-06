@@ -1,12 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 
 	"github.com/hostwithquantum/ansible-openstack-inventory/auth"
 	"github.com/hostwithquantum/ansible-openstack-inventory/file"
+	"github.com/hostwithquantum/ansible-openstack-inventory/host"
 	"github.com/hostwithquantum/ansible-openstack-inventory/inventory"
 	"github.com/hostwithquantum/ansible-openstack-inventory/response"
 	"github.com/hostwithquantum/ansible-openstack-inventory/server"
@@ -86,19 +88,18 @@ func main() {
 			api := server.NewAPI(accessNetwork, provider)
 
 			if c.String("host") != "" {
-				s := api.GetByNode(c.String("host"))
-
-				hostVars := make(map[string]string)
-				hostVars["ansible_host"] = s.IPAddress
-				hostVars["floating_ip"] = s.FloatingIP
-
-				json, err := json.Marshal(hostVars)
+				server, err := api.GetByNode(c.String("host"))
 				if err != nil {
-					log.Fatal(err)
+					return err
+				}
+
+				json, err := json.Marshal(host.Build(server))
+				if err != nil {
+					return err
 				}
 
 				fmt.Println(string(json))
-				os.Exit(0)
+				return nil
 			}
 
 			var childrenGroups = cfg.Section("all").Key("children").Strings(",")

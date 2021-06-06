@@ -45,7 +45,7 @@ func NewAPI(network string, provider *gophercloud.ProviderClient) *API {
 }
 
 // GetByNode ...
-func (api API) GetByNode(host string) AnsibleServer {
+func (api API) GetByNode(host string) (AnsibleServer, error) {
 	opts := servers.ListOpts{Name: host}
 	pager := servers.List(api.client, opts)
 
@@ -56,8 +56,11 @@ func (api API) GetByNode(host string) AnsibleServer {
 	err := pager.EachPage(func(page pagination.Page) (bool, error) {
 		serverList, err := servers.ExtractServers(page)
 		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+			return false, err
+		}
+
+		if len(serverList) == 0 {
+			return false, nil
 		}
 
 		for _, s := range serverList {
@@ -74,11 +77,15 @@ func (api API) GetByNode(host string) AnsibleServer {
 	})
 
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return server, err
 	}
 
-	return server
+	// empty result
+	if server.Name == "" {
+		return server, fmt.Errorf("Could not find a host named: %s", host)
+	}
+
+	return server, nil
 }
 
 // GetByCustomer ...
