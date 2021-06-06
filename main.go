@@ -3,12 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/hostwithquantum/ansible-openstack-inventory/auth"
 	"github.com/hostwithquantum/ansible-openstack-inventory/file"
 	"github.com/hostwithquantum/ansible-openstack-inventory/inventory"
+	"github.com/hostwithquantum/ansible-openstack-inventory/response"
 	"github.com/hostwithquantum/ansible-openstack-inventory/server"
 	"github.com/urfave/cli/v2"
 	"gopkg.in/ini.v1"
@@ -109,6 +109,11 @@ func main() {
 			}
 
 			allServers := api.GetByCustomer(customer)
+			if len(allServers) == 0 {
+				// return early and avoid odd warnings when invoked via Ansible
+				fmt.Println(response.BuildEmptyRepository(nil))
+				return nil
+			}
 
 			inventory := inventory.NewInventory(customer, append(childrenGroups, defaultGroup))
 
@@ -149,7 +154,8 @@ func main() {
 
 	err := app.Run(os.Args)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Print(response.BuildEmptyRepository(err))
+		os.Exit(1)
 	}
 	os.Exit(0)
 }
