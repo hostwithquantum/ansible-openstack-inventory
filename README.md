@@ -30,13 +30,18 @@ We use gophercloud to interface with OpenStack, the usual environment variables 
 $ QUANTUM_CUSTOMER=... ./ansible-openstack-inventory
 ```
 
+## Testing
+
+Parts of the Go code are covered with unit tests. Full integration tests available in [e2e/](e2e/).
+
+
 ## Todo
 
 - [x] return correct JSON format of hosts
 - [x] how to add additional groups
 - [x] implement `--list`
 - [x] implement `--host node`
-- [ ] better error handling (instead of `os.Exit`)
+- [x] better error handling (instead of `os.Exit`)
 
 ## License
 

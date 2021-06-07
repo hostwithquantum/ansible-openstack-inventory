@@ -2,13 +2,15 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/hostwithquantum/ansible-openstack-inventory/auth"
 	"github.com/hostwithquantum/ansible-openstack-inventory/file"
+	"github.com/hostwithquantum/ansible-openstack-inventory/host"
 	"github.com/hostwithquantum/ansible-openstack-inventory/inventory"
+	"github.com/hostwithquantum/ansible-openstack-inventory/response"
 	"github.com/hostwithquantum/ansible-openstack-inventory/server"
 	"github.com/urfave/cli/v2"
 	"gopkg.in/ini.v1"
@@ -65,50 +67,54 @@ func main() {
 		},
 		Action: func(c *cli.Context) error {
 			if c.Bool("list") && c.String("host") != "" {
-				log.Fatal("Can only use one of `--list` or `--host node`.")
+				return errors.New("Can only use one of `--list` or `--host node`.")
 			}
 
 			if c.String("host") == "" && !c.Bool("list") {
-				log.Fatal("No command provided.")
+				return errors.New("No command provided.")
 			}
 
 			provider, err := auth.Authenticate()
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 
 			cfg, err := ini.Load(c.String("config"))
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 			var accessNetwork = cfg.Section("").Key("network").String()
 
 			api := server.NewAPI(accessNetwork, provider)
 
 			if c.String("host") != "" {
-				s := api.GetByNode(c.String("host"))
-
-				hostVars := make(map[string]string)
-				hostVars["ansible_host"] = s.IPAddress
-				hostVars["floating_ip"] = s.FloatingIP
-
-				json, err := json.Marshal(hostVars)
+				server, err := api.GetByNode(c.String("host"))
 				if err != nil {
-					log.Fatal(err)
+					return err
+				}
+
+				json, err := json.Marshal(host.Build(server))
+				if err != nil {
+					return err
 				}
 
 				fmt.Println(string(json))
-				os.Exit(0)
+				return nil
 			}
 
 			var childrenGroups = cfg.Section("all").Key("children").Strings(",")
 
 			customer := c.String("customer")
 			if customer == "" {
-				log.Fatal("No customer env variable")
+				return errors.New("No customer env variable")
 			}
 
 			allServers := api.GetByCustomer(customer)
+			if len(allServers) == 0 {
+				// return early and avoid odd warnings when invoked via Ansible
+				fmt.Println(response.BuildEmptyRepository(nil))
+				return nil
+			}
 
 			inventory := inventory.NewInventory(customer, append(childrenGroups, defaultGroup))
 
@@ -149,7 +155,8 @@ func main() {
 
 	err := app.Run(os.Args)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Print(response.BuildEmptyRepository(err))
+		os.Exit(1)
 	}
 	os.Exit(0)
 }
