@@ -1,5 +1,7 @@
 package server
 
+const role_label string = "com.planetary-quantum.meta.role"
+
 // IsManager ...
 func IsManager(server AnsibleServer) bool {
 	// fallback: setups without metadata
@@ -20,7 +22,7 @@ func isRole(md map[string]string, role string) bool {
 		return false
 	}
 
-	node_role, ok := md["com.planetary-quantum.meta.role"]
+	node_role, ok := md[role_label]
 	if !ok {
 		return false
 	}
