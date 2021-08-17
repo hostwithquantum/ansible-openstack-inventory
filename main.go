@@ -8,8 +8,11 @@ import (
 
 	"github.com/hostwithquantum/ansible-openstack-inventory/auth"
 	"github.com/hostwithquantum/ansible-openstack-inventory/file"
+	"github.com/hostwithquantum/ansible-openstack-inventory/fip"
 	"github.com/hostwithquantum/ansible-openstack-inventory/host"
 	"github.com/hostwithquantum/ansible-openstack-inventory/inventory"
+	"github.com/hostwithquantum/ansible-openstack-inventory/lbaas"
+	"github.com/hostwithquantum/ansible-openstack-inventory/presenter"
 	"github.com/hostwithquantum/ansible-openstack-inventory/response"
 	"github.com/hostwithquantum/ansible-openstack-inventory/server"
 	"github.com/urfave/cli/v2"
@@ -74,6 +77,11 @@ func main() {
 				return errors.New("No command provided.")
 			}
 
+			customer := c.String("customer")
+			if customer == "" {
+				return errors.New("No customer env variable")
+			}
+
 			provider, err := auth.Authenticate()
 			if err != nil {
 				return err
@@ -85,12 +93,27 @@ func main() {
 			}
 			var accessNetwork = cfg.Section("").Key("network").String()
 
-			api := server.NewAPI(accessNetwork, provider)
+			fip := fip.NewFIP(accessNetwork, provider)
+			lb := lbaas.NewAPI(customer, provider)
+			compute := server.NewAPI(customer, accessNetwork, provider)
+
+			p := presenter.Presenter{
+				FIPs: fip.GetIps(),
+			}
 
 			if c.String("host") != "" {
-				server, err := api.GetByNode(c.String("host"))
+				server, err := compute.GetByNode(c.String("host"))
 				if err != nil {
 					return err
+				}
+
+				server = p.AddFipToNode(server)
+				if lb.HasLB() {
+					haproxy, err := lb.GetByName()
+					if err != nil {
+						return err
+					}
+					server = p.AddLoadbalancerToNode(server, haproxy)
 				}
 
 				json, err := json.Marshal(host.Build(server))
@@ -104,16 +127,31 @@ func main() {
 
 			var childrenGroups = cfg.Section("all").Key("children").Strings(",")
 
-			customer := c.String("customer")
-			if customer == "" {
-				return errors.New("No customer env variable")
+			allServers, err := compute.GetByCustomer(customer)
+			if err != nil {
+				return err
 			}
 
-			allServers := api.GetByCustomer(customer)
 			if len(allServers) == 0 {
 				// return early and avoid odd warnings when invoked via Ansible
 				fmt.Println(response.BuildEmptyRepository(nil))
 				return nil
+			}
+
+			allServers = p.AddFipsToNodes(allServers)
+			if lb.HasLB() {
+				haproxy, err := lb.GetByName()
+				if err != nil {
+					return err
+				}
+
+				var ready []server.AnsibleServer
+				for _, server := range allServers {
+					server = p.AddLoadbalancerToNode(server, haproxy)
+					ready = append(ready, server)
+				}
+
+				allServers = ready
 			}
 
 			inventory := inventory.NewInventory(customer, append(childrenGroups, defaultGroup))

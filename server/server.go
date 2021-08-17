@@ -7,31 +7,35 @@ import (
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
-	"github.com/gophercloud/gophercloud/pagination"
+	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/loadbalancers"
 )
 
 // AnsibleServer ... simple struct to build an inventory from
 type AnsibleServer struct {
-	Name       string
-	IPAddress  string
-	FloatingIP string
+	ID         string // OpenStack Instance ID
+	Name       string // OpenStack Instance Name
+	IPAddress  string // IP address on customer network
+	FloatingIP string // Floating IP
 	MetaData   map[string]string
 }
 
 // API ...
 type API struct {
 	accessNetwork string
+	customer      string
 	provider      *gophercloud.ProviderClient
 	client        *gophercloud.ServiceClient
+	publicIPs     map[string]map[string]string
+	lb            loadbalancers.LoadBalancer
 }
 
 // NewAPI ... factory/ctor
-func NewAPI(network string, provider *gophercloud.ProviderClient) *API {
+func NewAPI(customer string, network string, provider *gophercloud.ProviderClient) *API {
 	api := new(API)
 	api.accessNetwork = network
 	api.provider = provider
+	api.customer = customer
 
 	client, err := openstack.NewComputeV2(api.provider, gophercloud.EndpointOpts{Region: "RegionOne"})
 	if err != nil {
@@ -46,104 +50,57 @@ func NewAPI(network string, provider *gophercloud.ProviderClient) *API {
 
 // GetByNode ...
 func (api API) GetByNode(host string) (AnsibleServer, error) {
-	opts := servers.ListOpts{Name: host}
-	pager := servers.List(api.client, opts)
-
-	server := AnsibleServer{}
-
-	publicIPs := api.getFloatingIps()
-
-	err := pager.EachPage(func(page pagination.Page) (bool, error) {
-		serverList, err := servers.ExtractServers(page)
-		if err != nil {
-			return false, err
-		}
-
-		if len(serverList) == 0 {
-			return false, nil
-		}
-
-		for _, s := range serverList {
-			server.Name = s.Name
-			server.IPAddress = extractIP(s.Addresses, api.accessNetwork)
-			server.MetaData = s.Metadata
-
-			if _, ok := publicIPs[s.ID]; ok {
-				server.FloatingIP = publicIPs[s.ID]
-			}
-		}
-
-		return false, nil
-	})
-
+	listOpts := servers.ListOpts{Name: host}
+	servers, err := api.doRequest(listOpts)
 	if err != nil {
-		return server, err
+		return AnsibleServer{}, err
 	}
 
-	// empty result
-	if server.Name == "" {
-		return server, fmt.Errorf("Could not find a host named: %s", host)
+	if len(servers) == 0 {
+		return AnsibleServer{}, fmt.Errorf("Could not find a host named: %s", host)
 	}
 
-	return server, nil
+	return servers[0], nil
 }
 
 // GetByCustomer ...
-func (api API) GetByCustomer(customer string) []AnsibleServer {
-	publicIPs := api.getFloatingIps()
+func (api API) GetByCustomer(customer string) ([]AnsibleServer, error) {
+	listOpts := servers.ListOpts{}
+	return api.doRequest(listOpts)
+}
+
+func (api API) doRequest(listOpts servers.ListOpts) ([]AnsibleServer, error) {
+	var customerServers []AnsibleServer
 
 	allPages, err := servers.List(api.client, nil).AllPages()
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return customerServers, err
 	}
 
-	var customerServers []AnsibleServer
-
 	allServers, err := servers.ExtractServers(allPages)
+	if err != nil {
+		return customerServers, err
+	}
+
 	for _, server := range allServers {
 		// server.CUSTOMER pattern
 		parts := strings.Split(server.Name, ".")
 
-		if parts[len(parts)-1] != customer {
+		if parts[len(parts)-1] != api.customer {
 			continue
 		}
 
 		node := AnsibleServer{
+			ID:        server.ID,
 			Name:      server.Name,
 			IPAddress: extractIP(server.Addresses, api.accessNetwork),
 			MetaData:  server.Metadata,
 		}
 
-		if _, ok := publicIPs[server.ID]; ok {
-			node.FloatingIP = publicIPs[server.ID]
-		}
-
 		customerServers = append(customerServers, node)
 	}
 
-	return customerServers
-}
-
-func (api API) getFloatingIps() map[string]string {
-	allPages, err := floatingips.List(api.client).AllPages()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	allFloatingIPs, err := floatingips.ExtractFloatingIPs(allPages)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	keep := make(map[string]string)
-	for _, floatingIP := range allFloatingIPs {
-		keep[floatingIP.InstanceID] = floatingIP.IP
-	}
-
-	return keep
+	return customerServers, nil
 }
 
 func extractIP(addresses map[string]interface{}, network string) string {
