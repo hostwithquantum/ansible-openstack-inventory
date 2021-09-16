@@ -1,6 +1,22 @@
 package server
 
+import "fmt"
+
 const role_label string = "com.planetary-quantum.meta.role"
+const group_label string = "com.planetary-quantum.meta.customer_group"
+
+func GetGroup(server AnsibleServer) (string, error) {
+	if len(server.MetaData) == 0 {
+		return "", fmt.Errorf("Server doesn't have metadata attached: %s", server.Name)
+	}
+
+	group, ok := server.MetaData[group_label]
+	if !ok {
+		return "", fmt.Errorf("Server doesn't have role attached: %s", server.Name)
+	}
+
+	return group, nil
+}
 
 // IsManager ...
 func IsManager(server AnsibleServer) bool {
