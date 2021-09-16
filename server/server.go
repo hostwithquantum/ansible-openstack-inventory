@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
@@ -80,6 +82,10 @@ func (api API) doRequest(listOpts servers.ListOpts) ([]AnsibleServer, error) {
 	allServers, err := servers.ExtractServers(allPages)
 	if err != nil {
 		return customerServers, err
+	}
+
+	if len(allServers) == 0 {
+		log.Debug("Couldn't find any servers in the tenant.")
 	}
 
 	for _, server := range allServers {

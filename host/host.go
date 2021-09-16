@@ -1,6 +1,8 @@
 package host
 
 import (
+	log "github.com/sirupsen/logrus"
+
 	"github.com/hostwithquantum/ansible-openstack-inventory/server"
 )
 
