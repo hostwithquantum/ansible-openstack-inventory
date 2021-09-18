@@ -57,3 +57,10 @@ if [ "$?" == 0 ]; then
 else
   log_failure "Missing property ansible_host (in hostvars)"
 fi
+
+assert_true $(cat ${result_json}|jq -r '._meta.hostvars|to_entries|.[].value.quantum_group_name|length > 0')
+if [ "$?" == 0 ]; then
+  log_success "Each host has a property quantum_group_name"
+else
+  log_failure "Missing property quantum_group_name (in hostvars)"
+fi
