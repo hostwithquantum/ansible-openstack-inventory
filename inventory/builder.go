@@ -3,23 +3,17 @@ package inventory
 import (
 	"log"
 
+	"github.com/hostwithquantum/ansible-openstack-inventory/host"
 	"github.com/hostwithquantum/ansible-openstack-inventory/server"
 )
 
 func (inventory AnsibleInventory) BuildServers(nodes []server.AnsibleServer, defaultGroup string) {
 	for _, node := range nodes {
 		inventory.AddHostToGroup(node.Name, defaultGroup)
-		inventory.AddHostVar("ansible_host", node.IPAddress, node.Name)
 
-		if node.FloatingIP != "" {
-			inventory.AddHostVar("floating_ip", node.FloatingIP, node.Name)
-		}
-
-		if len(node.MetaData) > 0 {
-			node_swarm_label, ok := node.MetaData["com.planetary-quantum.meta.label"]
-			if ok {
-				inventory.AddHostVar("swarm_labels", node_swarm_label, node.Name)
-			}
+		hostVars := host.Build(node)
+		for k, v := range hostVars {
+			inventory.AddHostVar(k, v, node.Name)
 		}
 	}
 }

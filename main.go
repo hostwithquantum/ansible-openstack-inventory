@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/hostwithquantum/ansible-openstack-inventory/auth"
 	"github.com/hostwithquantum/ansible-openstack-inventory/file"
 	"github.com/hostwithquantum/ansible-openstack-inventory/fip"
@@ -42,6 +44,12 @@ func main() {
 		},
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
+				Name:    "debug",
+				Usage:   "Turn on debug output (stdout)",
+				Value:   false,
+				EnvVars: []string{"QUANTUM_INVENTORY_DEBUG"},
+			},
+			&cli.BoolFlag{
 				Name:  "list",
 				Usage: "List the repository",
 				Value: false,
@@ -69,6 +77,10 @@ func main() {
 			},
 		},
 		Action: func(c *cli.Context) error {
+			if c.Bool("debug") {
+				log.SetLevel(log.DebugLevel)
+			}
+
 			if c.Bool("list") && c.String("host") != "" {
 				return errors.New("Can only use one of `--list` or `--host node`.")
 			}

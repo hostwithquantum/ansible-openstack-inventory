@@ -56,3 +56,21 @@ func Test_Manager(t *testing.T) {
 		}
 	}
 }
+
+func Test_Group(t *testing.T) {
+	metaDataExamples := []map[string]string{
+		{"com.planetary-quantum.meta.customer_group": "blah"},
+		{"com.planetary-quantum.meta.customer_group": "example-customer-group"},
+	}
+
+	for _, md := range metaDataExamples {
+		node := server.AnsibleServer{
+			MetaData: md,
+		}
+
+		_, err := server.GetGroup(node)
+		if err != nil {
+			t.Error(err)
+		}
+	}
+}

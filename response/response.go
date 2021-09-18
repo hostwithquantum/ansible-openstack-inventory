@@ -1,9 +1,14 @@
 package response
 
+import (
+	log "github.com/sirupsen/logrus"
+)
+
 func BuildEmptyRepository(err error) string {
 	// print empty inventory
 	if err != nil {
-		// not sure what to do with it yet
+		// --debug prints something
+		log.Debug(err)
 	}
 
 	return "{\"_meta\": {\"hostvars\": {}}}"

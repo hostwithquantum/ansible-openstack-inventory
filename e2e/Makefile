@@ -1,8 +1,19 @@
 inv_build:=../dist/ansible-openstack-inventory_darwin_amd64/ansible-openstack-inventory
 
+
+assert.sh:
+	wget \
+		-O ./assert.sh \
+		https://raw.githubusercontent.com/torokmark/assert.sh/main/assert.sh
+
+.PHONY: clean
+clean:
+	rm assert.sh
+
+
 .PHONY: e2e
-e2e:
-	$(info You can run `make test-host` or `make test-no-host`)
+e2e: assert.sh
+	./basic-test.sh
 
 .PHONY: _dep
 _dep:
