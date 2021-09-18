@@ -3,7 +3,10 @@ bin:=./dist/ansible-openstack-inventory_darwin_amd64/ansible-openstack-inventory
 
 .PHONY: build
 build:
-	goreleaser --snapshot --skip-publish --rm-dist
+	goreleaser build \
+	--single-target \
+	--snapshot \
+	--rm-dist
 
 .PHONY: dev
 dev:
