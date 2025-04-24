@@ -10,6 +10,10 @@ builds:
       - darwin
 archives:
   - formats: [binary]
+    name_template: >-
+      {{- .Binary -}}_{{- .Os -}}_{{- .Arch -}}
+      {{- with .Arm -}}v{{ . }}{{- end -}}
+      {{- with .Amd64 -}}{{ . }}{{- end -}}
 checksum:
   name_template: 'checksums.txt'
 changelog:
