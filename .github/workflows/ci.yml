@@ -17,11 +17,11 @@ jobs:
       - name: Run tests
         run: make test
 
-      - uses: goreleaser/goreleaser-action@v2
+      - uses: goreleaser/goreleaser-action@v6
         with:
           version: latest
           args: check
-      - uses: goreleaser/goreleaser-action@v2
+      - uses: goreleaser/goreleaser-action@v6
         with:
           version: latest
           args: build --single-target --snapshot --clean
