@@ -39,7 +39,9 @@ func NewAPI(customer string, network string, provider *gophercloud.ProviderClien
 	api.provider = provider
 	api.customer = customer
 
-	client, err := openstack.NewComputeV2(api.provider, gophercloud.EndpointOpts{Region: "RegionOne"})
+	client, err := openstack.NewComputeV2(api.provider, gophercloud.EndpointOpts{
+		Region: os.Getenv("OS_REGION_NAME"),
+	})
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -59,7 +61,7 @@ func (api API) GetByNode(host string) (AnsibleServer, error) {
 	}
 
 	if len(servers) == 0 {
-		return AnsibleServer{}, fmt.Errorf("Could not find a host named: %s", host)
+		return AnsibleServer{}, fmt.Errorf("could not find a host named: %s", host)
 	}
 
 	return servers[0], nil
