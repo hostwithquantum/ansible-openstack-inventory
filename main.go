@@ -24,11 +24,11 @@ import (
 var version string
 var defaultGroup = "all"
 
-// FIXME: move into config.ini
-var defaultVars = map[string]string{
-	"ansible_ssh_user":           "core",
-	"ansible_ssh_common_args":    "-F customers/files/quantum/ssh_config",
-	"ansible_python_interpreter": "/opt/python/bin/python",
+// The default vars are set via flags
+var defaultVars = []string{
+	"ansible_python_interpreter",
+	"ansible_ssh_user",
+	"ansible_ssh_common_args",
 }
 
 func main() {
@@ -74,6 +74,21 @@ func main() {
 				Usage:   "Path to ./inventory/customer/group_vars",
 				Value:   "",
 				EnvVars: []string{"QUANTUM_INVENTORY_VARS_PATH"},
+			},
+			&cli.StringFlag{
+				Name:    "ansible_python_interpreter",
+				Value:   "/opt/python/bin/python",
+				EnvVars: []string{"QUANTUM_INVENTORY_PYTHON"},
+			},
+			&cli.StringFlag{
+				Name:   "ansible_ssh_user",
+				Value:  "core",
+				Hidden: true,
+			},
+			&cli.StringFlag{
+				Name:    "ansible_ssh_common_args",
+				Value:   "-F customers/files/quantum/ssh_config",
+				EnvVars: []string{"QUANTUM_INVENTORY_SSH_ARGS"},
 			},
 		},
 		Action: func(c *cli.Context) error {
@@ -168,8 +183,8 @@ func main() {
 
 			inventory := inventory.NewInventory(customer, append(childrenGroups, defaultGroup))
 
-			for defaultVar, defaultValue := range defaultVars {
-				inventory.AddVarToGroup(defaultGroup, defaultVar, defaultValue)
+			for _, varName := range defaultVars {
+				inventory.AddVarToGroup(defaultGroup, varName, c.String(varName))
 			}
 
 			inventory.BuildServers(allServers, defaultGroup)
