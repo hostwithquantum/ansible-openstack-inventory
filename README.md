@@ -1,3 +1,7 @@
+<p align="center">
+<img src="logo.png" width="300">
+</p>
+
 # ansible-openstack-inventory
 
 Inventory script for a dynamic OpenStack-based inventory.
@@ -6,7 +10,7 @@ This script creates a default group `all` and various child groups which are con
 
 ## Project Status
 
-This is not a general purpose inventory for all OpenStack clouds, but instead it's heavily tailored towards what we use and need to bootstrap nodes for our [application hosting service](https://www.planetary-quantum.com).
+This is not a general purpose inventory for all OpenStack clouds, but instead it's heavily tailored towards what we use and need to bootstrap nodes for our [Docker hosting](https://www.planetary-quantum.com).
 
 Specifically in regards to Docker Swarm, inventory script returns nodes and adds groups and labels for each node/group:
 
@@ -33,15 +37,6 @@ $ QUANTUM_CUSTOMER=... ./ansible-openstack-inventory
 ## Testing
 
 Parts of the Go code are covered with unit tests. Full integration tests available in [e2e/](e2e/).
-
-
-## Todo
-
-- [x] return correct JSON format of hosts
-- [x] how to add additional groups
-- [x] implement `--list`
-- [x] implement `--host node`
-- [x] better error handling (instead of `os.Exit`)
 
 ## License
 
