@@ -97,16 +97,16 @@ func main() {
 			}
 
 			if c.Bool("list") && c.String("host") != "" {
-				return errors.New("Can only use one of `--list` or `--host node`.")
+				return errors.New("can only use one of `--list` or `--host node`")
 			}
 
 			if c.String("host") == "" && !c.Bool("list") {
-				return errors.New("No command provided.")
+				return errors.New("no command provided")
 			}
 
 			customer := c.String("customer")
 			if customer == "" {
-				return errors.New("No customer env variable")
+				return errors.New("no customer env variable")
 			}
 
 			provider, err := auth.Authenticate()
