@@ -19,8 +19,7 @@ func Build(node server.AnsibleServer) map[string]string {
 		return hostVars
 	}
 
-	node_swarm_label, ok := node.MetaData["com.planetary-quantum.meta.label"]
-	if ok {
+	if node_swarm_label, ok := node.MetaData["com.planetary-quantum.meta.label"]; ok {
 		hostVars["swarm_labels"] = node_swarm_label
 	}
 

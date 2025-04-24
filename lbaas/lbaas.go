@@ -24,7 +24,7 @@ func NewAPI(customer string, provider *gophercloud.ProviderClient) *API {
 
 	client, err := openstack.NewLoadBalancerV2(provider, gophercloud.EndpointOpts{
 		Name:   "octavia",
-		Region: "RegionOne",
+		Region: os.Getenv("OS_REGION_NAME"),
 	})
 	if err != nil {
 		fmt.Println(err)
@@ -60,24 +60,16 @@ func (api API) GetById(id string) (loadbalancers.LoadBalancer, error) {
 }
 
 func (api API) GetByName() (loadbalancers.LoadBalancer, error) {
-	listOpts := loadbalancers.ListOpts{
+	return api.doSingleRequest(loadbalancers.ListOpts{
 		Name: buildLBName(api.customer),
-	}
-
-	return api.doSingleRequest(listOpts)
+	})
 }
 
 func (api API) HasLB() bool {
-	listOpts := loadbalancers.ListOpts{
+	_, err := api.doSingleRequest(loadbalancers.ListOpts{
 		Name: buildLBName(api.customer),
-	}
-
-	_, err := api.doSingleRequest(listOpts)
-	if err != nil {
-		return false
-	}
-
-	return true
+	})
+	return (err == nil)
 }
 
 func (api API) doSingleRequest(listOpts loadbalancers.ListOpts) (loadbalancers.LoadBalancer, error) {
@@ -93,7 +85,7 @@ func (api API) doSingleRequest(listOpts loadbalancers.ListOpts) (loadbalancers.L
 	}
 
 	if len(allLoadbalancers) == 0 {
-		return lb, fmt.Errorf("Couldn't find loadbalancer: %v", listOpts)
+		return lb, fmt.Errorf("couldn't find loadbalancer: %v", listOpts)
 	}
 
 	return allLoadbalancers[0], nil

@@ -10,7 +10,6 @@ import (
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
-	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/loadbalancers"
 )
 
 // AnsibleServer ... simple struct to build an inventory from
@@ -28,8 +27,6 @@ type API struct {
 	customer      string
 	provider      *gophercloud.ProviderClient
 	client        *gophercloud.ServiceClient
-	publicIPs     map[string]map[string]string
-	lb            loadbalancers.LoadBalancer
 }
 
 // NewAPI ... factory/ctor
@@ -39,7 +36,9 @@ func NewAPI(customer string, network string, provider *gophercloud.ProviderClien
 	api.provider = provider
 	api.customer = customer
 
-	client, err := openstack.NewComputeV2(api.provider, gophercloud.EndpointOpts{Region: "RegionOne"})
+	client, err := openstack.NewComputeV2(api.provider, gophercloud.EndpointOpts{
+		Region: os.Getenv("OS_REGION_NAME"),
+	})
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -59,7 +58,7 @@ func (api API) GetByNode(host string) (AnsibleServer, error) {
 	}
 
 	if len(servers) == 0 {
-		return AnsibleServer{}, fmt.Errorf("Could not find a host named: %s", host)
+		return AnsibleServer{}, fmt.Errorf("could not find a host named: %s", host)
 	}
 
 	return servers[0], nil
@@ -74,7 +73,7 @@ func (api API) GetByCustomer(customer string) ([]AnsibleServer, error) {
 func (api API) doRequest(listOpts servers.ListOpts) ([]AnsibleServer, error) {
 	var customerServers []AnsibleServer
 
-	allPages, err := servers.List(api.client, nil).AllPages()
+	allPages, err := servers.List(api.client, listOpts).AllPages()
 	if err != nil {
 		return customerServers, err
 	}
@@ -109,14 +108,14 @@ func (api API) doRequest(listOpts servers.ListOpts) ([]AnsibleServer, error) {
 	return customerServers, nil
 }
 
-func extractIP(addresses map[string]interface{}, network string) string {
+func extractIP(addresses map[string]any, network string) string {
 	for networkName, networkDetails := range addresses {
 		if networkName != network {
 			continue
 		}
 
-		for _, data := range networkDetails.([]interface{}) {
-			for k, v := range data.(map[string]interface{}) {
+		for _, data := range networkDetails.([]any) {
+			for k, v := range data.(map[string]any) {
 				if k != "addr" {
 					continue
 				}

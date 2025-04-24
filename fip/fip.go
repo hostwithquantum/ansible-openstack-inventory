@@ -21,7 +21,9 @@ func NewFIP(network string, provider *gophercloud.ProviderClient) *FIP {
 	api.accessNetwork = network
 	api.provider = provider
 
-	client, err := openstack.NewComputeV2(api.provider, gophercloud.EndpointOpts{Region: "RegionOne"})
+	client, err := openstack.NewComputeV2(api.provider, gophercloud.EndpointOpts{
+		Region: os.Getenv("OS_REGION_NAME"),
+	})
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
