@@ -3,7 +3,7 @@ module github.com/hostwithquantum/ansible-openstack-inventory
 go 1.24.1
 
 require (
-	github.com/gophercloud/gophercloud v0.13.0
+	github.com/gophercloud/gophercloud v1.14.1
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/urfave/cli/v2 v2.27.6
