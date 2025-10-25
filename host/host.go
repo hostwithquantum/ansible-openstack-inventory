@@ -1,7 +1,7 @@
 package host
 
 import (
-	log "github.com/sirupsen/logrus"
+	log "log/slog"
 
 	"github.com/hostwithquantum/ansible-openstack-inventory/server"
 )
@@ -15,7 +15,7 @@ func Build(node server.AnsibleServer) map[string]string {
 	}
 
 	if len(node.MetaData) == 0 {
-		log.Debugf("Empty/broken metadata for %s", node.Name)
+		log.Debug("Empty/broken metadata for: " + node.Name)
 		return hostVars
 	}
 
@@ -25,7 +25,7 @@ func Build(node server.AnsibleServer) map[string]string {
 
 	node_group, err := server.GetGroup(node)
 	if err != nil {
-		log.Debug(err)
+		log.Debug(err.Error())
 	} else {
 		hostVars["quantum_group_name"] = node_group
 	}

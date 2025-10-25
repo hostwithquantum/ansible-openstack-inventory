@@ -5,27 +5,21 @@ import (
 	"testing"
 
 	"github.com/hostwithquantum/ansible-openstack-inventory/response"
+	"github.com/stretchr/testify/assert"
+)
+
+var (
+	expectation = "{\"_meta\": {\"hostvars\": {}}}"
 )
 
 func TestError_BuildEmptyResponse(t *testing.T) {
-	err := errors.New("foo")
-
-	empty := response.BuildEmptyRepository(err)
+	empty := response.BuildEmptyRepository(errors.New("foo"))
 
 	// cannot return error in response -> Ansible barfs
-	expectation := "{\"_meta\": {\"hostvars\": {}}}"
-
-	if empty != expectation {
-		t.Errorf("Broken empty thing:\n %v\n (expected: %v)", empty, expectation)
-	}
+	assert.Equal(t, expectation, empty, "Broken empty thing:\n %v\n (expected: %v)", empty, expectation)
 }
 
 func TestNoError_BuildEmptyResponse(t *testing.T) {
 	empty := response.BuildEmptyRepository(nil)
-
-	expectation := "{\"_meta\": {\"hostvars\": {}}}"
-
-	if empty != expectation {
-		t.Errorf("Broken empty thing:\n %v\n (expected: %v)", empty, expectation)
-	}
+	assert.Equal(t, expectation, empty, "Broken empty thing:\n %v\n (expected: %v)", empty, expectation)
 }

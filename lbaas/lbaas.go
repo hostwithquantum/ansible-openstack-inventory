@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	log "log/slog"
+
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/loadbalancer/v2/loadbalancers"
@@ -27,7 +29,7 @@ func NewAPI(customer string, provider *gophercloud.ProviderClient) *API {
 		Region: os.Getenv("OS_REGION_NAME"),
 	})
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err.Error())
 		os.Exit(1)
 	}
 
@@ -39,12 +41,12 @@ func NewAPI(customer string, provider *gophercloud.ProviderClient) *API {
 func (api API) GetAll() []loadbalancers.LoadBalancer {
 	allPages, err := loadbalancers.List(api.client, nil).AllPages()
 	if err != nil {
-		fmt.Printf("First: %s", err)
+		log.Error("First: " + err.Error())
 		os.Exit(1)
 	}
 	allLoadbalancers, err := loadbalancers.ExtractLoadBalancers(allPages)
 	if err != nil {
-		fmt.Printf("Second: %s", err)
+		log.Error("Second: " + err.Error())
 		os.Exit(1)
 	}
 

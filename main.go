@@ -6,12 +6,13 @@ import (
 	"fmt"
 	"os"
 
-	log "github.com/sirupsen/logrus"
+	log "log/slog"
 
 	"github.com/hostwithquantum/ansible-openstack-inventory/auth"
 	"github.com/hostwithquantum/ansible-openstack-inventory/file"
 	"github.com/hostwithquantum/ansible-openstack-inventory/fip"
 	"github.com/hostwithquantum/ansible-openstack-inventory/host"
+	"github.com/hostwithquantum/ansible-openstack-inventory/internal/utils"
 	"github.com/hostwithquantum/ansible-openstack-inventory/inventory"
 	"github.com/hostwithquantum/ansible-openstack-inventory/lbaas"
 	"github.com/hostwithquantum/ansible-openstack-inventory/presenter"
@@ -92,9 +93,12 @@ func main() {
 			},
 		},
 		Action: func(c *cli.Context) error {
+			opts := log.HandlerOptions{}
 			if c.Bool("debug") {
-				log.SetLevel(log.DebugLevel)
+				opts.Level = log.LevelDebug
 			}
+
+			log.SetDefault(log.New(log.NewTextHandler(os.Stdout, &opts)))
 
 			if c.Bool("list") && c.String("host") != "" {
 				return errors.New("can only use one of `--list` or `--host node`")
@@ -119,6 +123,9 @@ func main() {
 				return err
 			}
 			var accessNetwork = cfg.Section("").Key("network").String()
+			if accessNetwork == "" {
+				return errors.New("network key is required in config file")
+			}
 
 			fip := fip.NewFIP(accessNetwork, provider)
 			lb := lbaas.NewAPI(customer, provider)
@@ -158,6 +165,9 @@ func main() {
 			if err != nil {
 				return err
 			}
+
+			// Sort servers by name for consistent ordering
+			utils.SortServersByName(allServers)
 
 			if len(allServers) == 0 {
 				// return early and avoid odd warnings when invoked via Ansible
@@ -218,8 +228,7 @@ func main() {
 		},
 	}
 
-	err := app.Run(os.Args)
-	if err != nil {
+	if err := app.Run(os.Args); err != nil {
 		fmt.Print(response.BuildEmptyRepository(err))
 		os.Exit(1)
 	}

@@ -2,7 +2,8 @@ package inventory
 
 import (
 	"encoding/json"
-	"log"
+	log "log/slog"
+	"os"
 )
 
 // AnsibleInventory ...
@@ -78,7 +79,8 @@ func (inventory AnsibleInventory) ReturnJSONInventory() string {
 
 	jsonByte, err := json.Marshal(jsonMap)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err.Error())
+		os.Exit(1)
 	}
 
 	return string(jsonByte)

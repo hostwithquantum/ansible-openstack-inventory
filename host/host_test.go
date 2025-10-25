@@ -6,6 +6,7 @@ import (
 
 	"github.com/hostwithquantum/ansible-openstack-inventory/host"
 	"github.com/hostwithquantum/ansible-openstack-inventory/server"
+	"github.com/stretchr/testify/assert"
 )
 
 type testFixture struct {
@@ -17,9 +18,7 @@ func Test_Build(t *testing.T) {
 	data := testBuildDataprovider()
 	for _, fixture := range data {
 		hv := host.Build(fixture.Node)
-		if !reflect.DeepEqual(fixture.HostVars, hv) {
-			t.Errorf("Build is broken, expected '%v', but got '%v'", fixture.HostVars, hv)
-		}
+		assert.True(t, reflect.DeepEqual(fixture.HostVars, hv), "Build is broken, expected '%v', but got '%v'", fixture.HostVars, hv)
 	}
 }
 

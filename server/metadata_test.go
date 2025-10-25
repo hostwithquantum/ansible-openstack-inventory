@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/hostwithquantum/ansible-openstack-inventory/server"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_NoWorker(t *testing.T) {
@@ -18,9 +19,7 @@ func Test_NoWorker(t *testing.T) {
 			MetaData: md,
 		}
 
-		if server.IsWorker(node) {
-			t.Error("Shouldn't be a worker")
-		}
+		assert.False(t, server.IsWorker(node), "Shouldn't be a worker")
 	}
 }
 
@@ -33,10 +32,7 @@ func Test_Worker(t *testing.T) {
 		node := server.AnsibleServer{
 			MetaData: md,
 		}
-
-		if !server.IsWorker(node) {
-			t.Error("Should be a worker")
-		}
+		assert.True(t, server.IsWorker(node), "Should be a worker")
 	}
 }
 
@@ -51,9 +47,7 @@ func Test_Manager(t *testing.T) {
 			MetaData: md,
 		}
 
-		if !server.IsManager(node) {
-			t.Error("Should be a manager")
-		}
+		assert.True(t, server.IsManager(node), "Should be a manager")
 	}
 }
 
@@ -69,8 +63,6 @@ func Test_Group(t *testing.T) {
 		}
 
 		_, err := server.GetGroup(node)
-		if err != nil {
-			t.Error(err)
-		}
+		assert.NoError(t, err)
 	}
 }
