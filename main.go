@@ -122,6 +122,9 @@ func main() {
 				return err
 			}
 			var accessNetwork = cfg.Section("").Key("network").String()
+			if accessNetwork == "" {
+				return errors.New("network key is required in config file")
+			}
 
 			fip := fip.NewFIP(accessNetwork, provider)
 			lb := lbaas.NewAPI(customer, provider)
