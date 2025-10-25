@@ -12,6 +12,7 @@ import (
 	"github.com/hostwithquantum/ansible-openstack-inventory/file"
 	"github.com/hostwithquantum/ansible-openstack-inventory/fip"
 	"github.com/hostwithquantum/ansible-openstack-inventory/host"
+	"github.com/hostwithquantum/ansible-openstack-inventory/internal/utils"
 	"github.com/hostwithquantum/ansible-openstack-inventory/inventory"
 	"github.com/hostwithquantum/ansible-openstack-inventory/lbaas"
 	"github.com/hostwithquantum/ansible-openstack-inventory/presenter"
@@ -164,6 +165,9 @@ func main() {
 			if err != nil {
 				return err
 			}
+
+			// Sort servers by name for consistent ordering
+			utils.SortServersByName(allServers)
 
 			if len(allServers) == 0 {
 				// return early and avoid odd warnings when invoked via Ansible
