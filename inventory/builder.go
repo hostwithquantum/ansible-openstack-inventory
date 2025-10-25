@@ -1,7 +1,8 @@
 package inventory
 
 import (
-	"log"
+	log "log/slog"
+	"os"
 
 	"github.com/hostwithquantum/ansible-openstack-inventory/host"
 	"github.com/hostwithquantum/ansible-openstack-inventory/server"
@@ -23,7 +24,8 @@ func (inventory AnsibleInventory) BuildServerGroups(nodes []server.AnsibleServer
 		for _, g := range groups {
 			switch g {
 			case "all":
-				log.Fatal("Group 'all' should not be part of the (server) groups.")
+				log.Error("Group 'all' should not be part of the (server) groups.")
+				os.Exit(1)
 
 			case "docker_swarm_manager":
 				if server.IsManager(node) {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/hostwithquantum/ansible-openstack-inventory/file"
 	"github.com/hostwithquantum/ansible-openstack-inventory/inventory"
+	"github.com/stretchr/testify/assert"
 )
 
 func ExampleNewInventory() {
@@ -26,7 +27,7 @@ func Test_ReturnJSONInventory(t *testing.T) {
 		"\"test\":{\"hosts\":[\"127.0.0.1\"],\"vars\":{\"group_var\":[\"bar\",\"foobar\"]}}",
 	}
 
-	assertStringContains(json, tests, t)
+	assertStringContains(t, json, tests)
 }
 
 func Test_AddVarToGroup(t *testing.T) {
@@ -55,7 +56,7 @@ func Test_AddVarToGroup(t *testing.T) {
 		"\"another\":1",
 		"\"some_variable\":\"string\"",
 	}
-	assertStringContains(json, tests, t)
+	assertStringContains(t, json, tests)
 }
 
 func createBasicInventory() *inventory.AnsibleInventory {
@@ -68,11 +69,9 @@ func createBasicInventory() *inventory.AnsibleInventory {
 	return inventory
 }
 
-func assertStringContains(haystack string, needles []string, t *testing.T) {
+func assertStringContains(t *testing.T, haystack string, needles []string) {
+	t.Helper()
 	for _, test := range needles {
-		ok := strings.Contains(haystack, test)
-		if !ok {
-			t.Errorf("String does not contain: '%s'", test)
-		}
+		assert.True(t, strings.Contains(haystack, test), "String does not contain: '%s'", test)
 	}
 }

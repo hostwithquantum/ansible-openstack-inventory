@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	log "github.com/sirupsen/logrus"
+	log "log/slog"
 
 	"github.com/hostwithquantum/ansible-openstack-inventory/auth"
 	"github.com/hostwithquantum/ansible-openstack-inventory/file"
@@ -92,9 +92,12 @@ func main() {
 			},
 		},
 		Action: func(c *cli.Context) error {
+			opts := log.HandlerOptions{}
 			if c.Bool("debug") {
-				log.SetLevel(log.DebugLevel)
+				opts.Level = log.LevelDebug
 			}
+
+			log.SetDefault(log.New(log.NewTextHandler(os.Stdout, &opts)))
 
 			if c.Bool("list") && c.String("host") != "" {
 				return errors.New("can only use one of `--list` or `--host node`")
@@ -218,8 +221,7 @@ func main() {
 		},
 	}
 
-	err := app.Run(os.Args)
-	if err != nil {
+	if err := app.Run(os.Args); err != nil {
 		fmt.Print(response.BuildEmptyRepository(err))
 		os.Exit(1)
 	}

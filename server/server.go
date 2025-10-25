@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
+	log "log/slog"
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
@@ -40,7 +40,7 @@ func NewAPI(customer string, network string, provider *gophercloud.ProviderClien
 		Region: os.Getenv("OS_REGION_NAME"),
 	})
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err.Error())
 		os.Exit(1)
 	}
 

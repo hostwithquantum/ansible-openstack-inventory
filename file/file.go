@@ -2,7 +2,6 @@ package file
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -36,14 +35,13 @@ func (gvf GroupVarsFile) HandleGroup(group string) (map[string]interface{}, erro
 		return nil, fmt.Errorf("Path is a directory: %s", fileName)
 	}
 
-	buf, err := ioutil.ReadFile(fileName)
+	buf, err := os.ReadFile(fileName)
 	if err != nil {
 		return nil, err
 	}
 
 	groupFileYaml := make(map[string]interface{})
-	err = yaml.Unmarshal(buf, &groupFileYaml)
-	if err != nil {
+	if err := yaml.Unmarshal(buf, &groupFileYaml); err != nil {
 		return nil, err
 	}
 

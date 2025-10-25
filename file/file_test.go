@@ -4,14 +4,13 @@ import (
 	"testing"
 
 	"github.com/hostwithquantum/ansible-openstack-inventory/file"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_HandleGroup(t *testing.T) {
 	gvf := file.NewGroupVarsFile("./data")
 	groupFileYaml, err := gvf.HandleGroup("group")
-	if err != nil {
-		t.Error(err)
-	}
+	assert.NoError(t, err)
 
 	tests := make(map[string]interface{})
 	tests["variable"] = "value"
@@ -19,12 +18,7 @@ func Test_HandleGroup(t *testing.T) {
 
 	for varKey, varValue := range tests {
 		val, ok := groupFileYaml[varKey]
-		if !ok {
-			t.Errorf("Could not find '%s'", varKey)
-		}
-
-		if varValue != val {
-			t.Errorf("Value doesn't match: %v (expected: %v)", val, varValue)
-		}
+		assert.True(t, ok, "Could not find '%s'", varKey)
+		assert.Equal(t, varValue, val, "Value doesn't match: %v (expected: %v)", val, varValue)
 	}
 }

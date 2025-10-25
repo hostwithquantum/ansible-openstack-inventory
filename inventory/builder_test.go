@@ -5,6 +5,7 @@ import (
 
 	"github.com/hostwithquantum/ansible-openstack-inventory/inventory"
 	"github.com/hostwithquantum/ansible-openstack-inventory/server"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_Cluster(t *testing.T) {
@@ -26,9 +27,9 @@ func Test_Cluster(t *testing.T) {
 	manager_group := jsonInventory["docker_swarm_manager"].(inventory.InventoryGroup)
 	worker_group := jsonInventory["docker_swarm_worker"].(inventory.InventoryGroup)
 
-	assertHostCount(manager_group, 1, t)
-	assertHostCount(worker_group, 1, t)
-	assertHostCount(jsonInventory["all"].(inventory.InventoryGroup), 2, t)
+	assertHostCount(t, manager_group, 1)
+	assertHostCount(t, worker_group, 1)
+	assertHostCount(t, jsonInventory["all"].(inventory.InventoryGroup), 2)
 
 	host_data := jsonInventory["_meta"]
 	// fmt.Printf("%v", host_data)
@@ -39,9 +40,7 @@ func Test_Cluster(t *testing.T) {
 
 	for _, g := range groups {
 		_g, ok := jsonInventory[g].(inventory.InventoryGroup)
-		if !ok {
-			t.Errorf("Could not find group: %s", _g)
-		}
+		assert.True(t, ok, "Could not find group: %s", _g)
 
 		switch g {
 		case "docker_swarm_manager":
@@ -50,7 +49,7 @@ func Test_Cluster(t *testing.T) {
 			break
 
 		default:
-			assertHostCount(_g, len(servers), t)
+			assertHostCount(t, _g, len(servers))
 		}
 	}
 
@@ -74,9 +73,7 @@ func Test_SingleNode(t *testing.T) {
 	jsonInventory := ansible.BuildInventory()
 
 	_, ok := jsonInventory["docker_swarm_worker"].(inventory.InventoryGroup)
-	if ok {
-		t.Errorf("This group should not be here.")
-	}
+	assert.False(t, ok, "This group should not be here.")
 
 	for _, g := range append(groups, "all") {
 		if g == "docker_swarm_worker" {
@@ -84,14 +81,13 @@ func Test_SingleNode(t *testing.T) {
 		}
 
 		_g, ok := jsonInventory[g].(inventory.InventoryGroup)
-		if !ok {
-			t.Errorf("Could not find group: %s", _g)
-		}
-		assertHostCount(_g, len(servers), t)
+		assert.True(t, ok, "Could not find group: %s", _g)
+		assertHostCount(t, _g, len(servers))
 	}
 }
 
-func assertHostCount(group inventory.InventoryGroup, count int, t *testing.T) {
+func assertHostCount(t *testing.T, group inventory.InventoryGroup, count int) {
+	t.Helper()
 	if len(group.Hosts) != count {
 		t.Errorf("%s needs to have %d host(s)", group.Name, count)
 	}
