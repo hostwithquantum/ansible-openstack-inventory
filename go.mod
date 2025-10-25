@@ -1,6 +1,6 @@
 module github.com/hostwithquantum/ansible-openstack-inventory
 
-go 1.24.1
+go 1.25.1
 
 require (
 	github.com/gophercloud/gophercloud v1.14.1
